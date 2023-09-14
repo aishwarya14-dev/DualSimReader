@@ -1,5 +1,8 @@
 package com.cogostech.simreader;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -8,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.view.View;
 
+import androidx.core.app.ActivityCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -20,6 +24,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import static com.cogostech.simreader.R.id.action_settings;
 
@@ -40,8 +45,7 @@ public class MainActivity extends AppCompatActivity {
 //        System.out.println("GsmCellLocation " + cl.toString());
         MainActivity.context = getApplicationContext();
         setContentView(R.layout.activity_dual_sim_card_main);
-
-
+        requestPermission();
         clockwise(findViewById(R.id.listView));
     }
 
@@ -83,5 +87,32 @@ public class MainActivity extends AppCompatActivity {
         Animation animation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.clockwise);
         image.startAnimation(animation);
         readSims();
+    }
+
+    public  void requestPermission(){
+        if (Build.VERSION.SDK_INT < 30) {
+            if (ActivityCompat.checkSelfPermission(MainActivity.getMainActContext(), Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED) {
+                // if permission is not granted then we are requesting for the permissions on below line.
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, 100);
+            } else {
+                // if permission is already granted then we are displaying a toast message as permission granted.
+                Toast.makeText(MainActivity.getMainActContext(), "Permission already granted", Toast.LENGTH_SHORT).show();
+            }
+        }
+        else{
+            if (ActivityCompat.checkSelfPermission(MainActivity.getMainActContext(), Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED) {
+                // if permission is not granted then we are requesting for the permissions on below line.
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, 100);
+            }
+            if (ActivityCompat.checkSelfPermission(MainActivity.getMainActContext(), Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED) {
+                // if permission is not granted then we are requesting for the permissions on below line.
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_SMS}, 100);
+            }
+            if (ActivityCompat.checkSelfPermission(MainActivity.getMainActContext(), Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_DENIED) {
+                // if permission is not granted then we are requesting for the permissions on below line.
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_NUMBERS}, 100);
+            }
+            Toast.makeText(MainActivity.getMainActContext(), "Permission already granted", Toast.LENGTH_SHORT).show();
+        }
     }
 }

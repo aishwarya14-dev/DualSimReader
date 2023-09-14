@@ -3,12 +3,14 @@ package com.cogostech.simreader;
 import static com.cogostech.simreader.MainActivity.getMainActContext;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.content.Context;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
@@ -16,7 +18,7 @@ import java.util.ArrayList;
 import java.lang.reflect.Method;
 import java.util.List;
 
-public class SimReader {
+public class SimReader extends Activity {
     protected ArrayList<SimInfo> simitems;
     private static SimReader simReader;
     private boolean isSIM1Ready;
@@ -26,16 +28,16 @@ public class SimReader {
     private String sim1_STATE;
     private String sim2_STATE;
 
-    private static int sim1SubId;
-    private static int sim2SubId;
+    private CharSequence sim1Num;
+    private CharSequence sim2Num;
 
     private static String phoneNo1;
     private static String phoneNo2;
     //    private String sim1_IMSI;
 //    private String sim2_IMSI;
     // Service provider name (SPN)
-    private String sim1_SPN;
-    private String sim2_SPN;
+    private String sim1_name;
+    private String sim2_name;
     // Mobile country code (MCC)
     private String sim1_MCC;
     private String sim2_MCC;
@@ -48,11 +50,12 @@ public class SimReader {
         SimReader.simReader = null;
         SimReader.simReader = new SimReader();
         Context context = getMainActContext();
+//        simReader.requestPermission();
         TelephonyManager telMgr = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
 
-        simReader.sim1_SPN = telMgr.getSimOperatorName();
-        simReader.sim1_MCC = telMgr.getNetworkCountryIso();
-        simReader.sim1_MNC = telMgr.getNetworkOperatorName();
+//        simReader.sim1_SPN = telMgr.getSimOperatorName();
+//        simReader.sim1_MCC = telMgr.getNetworkCountryIso();
+//        simReader.sim1_MNC = telMgr.getNetworkOperatorName();
 
         simReader.isSIM1Ready = telMgr.getSimState() == TelephonyManager.SIM_STATE_READY;
         simReader.isSIM2Ready = false;
@@ -67,29 +70,35 @@ public class SimReader {
 
         if (simReader.isSIM2Ready) {
             try {
+
                 SubscriptionManager localSubscriptionManager = SubscriptionManager.from(context);
 
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
 
 
-                List<SubscriptionInfo> localList = localSubscriptionManager.getActiveSubscriptionInfoList();
-                    for(int i=0;i<localList.size();i++)
-                        System.out.println(localList.get(i).getNumber() + " " + localList.get(i).getSimSlotIndex());
-                SubscriptionInfo simInfo1 = (SubscriptionInfo) localList.get(1);
-                simReader.sim2_SPN = simInfo1.getDisplayName().toString();
-                SimReader.sim2SubId = simInfo1.getSubscriptionId();
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED ||  ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    if (Build.VERSION.SDK_INT >= 33) {
-                        SimReader.phoneNo2 = localSubscriptionManager.getPhoneNumber(sim2SubId);
-                    } else {
-                        SimReader.phoneNo2 = telMgr.getLine1Number();
+                    List<SubscriptionInfo> localList = localSubscriptionManager.getActiveSubscriptionInfoList();
+//                    for(int i=0;i<localList.size();i++)
+//                        System.out.println(localList.get(i).getNumber() + " " + localList.get(i).getSimSlotIndex()+" "+localList.get(i).getDisplayName());
+                    SubscriptionInfo simInfo1 = (SubscriptionInfo) localList.get(0);
+                    SubscriptionInfo simInfo2 = (SubscriptionInfo) localList.get(1);
+                    simReader.sim1_name = simInfo1.getDisplayName().toString();
+                    simReader.sim1Num = simInfo1.getNumber().toString();
 
-                    }
-                    System.out.println(phoneNo2);
-
+                    simReader.sim2_name = simInfo2.getDisplayName().toString();
+                    simReader.sim2Num = simInfo2.getNumber().toString();
+//                SimReader.sim1Num = simInfo1.getNumber().toString();
+//                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED ||  ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+//                    if (Build.VERSION.SDK_INT >= 33) {
+//                        SimReader.phoneNo2 = localSubscriptionManager.getPhoneNumber(sim2SubId);
+//                    } else {
+//                        SimReader.phoneNo2 = telMgr.getLine1Number();
+//
+//                    }
+//                    System.out.println(phoneNo2);
+//
+//                }
+                    System.out.println("!");
                 }
-                System.out.println("!");
-            }
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
@@ -98,16 +107,16 @@ public class SimReader {
         simReader.simitems = new ArrayList<SimInfo>();
 
         simReader.simitems.add(new SimInfo("SIM 1 state", simReader.sim1_STATE));
-        simReader.simitems.add(new SimInfo("Service provider name (SPN)", simReader.sim1_SPN));
-        simReader.simitems.add(new SimInfo("Mobile country code (MCC)", simReader.sim1_MCC));
-        simReader.simitems.add(new SimInfo("Mobile operator name", simReader.sim1_MNC));
+        simReader.simitems.add(new SimInfo("Service provider name (SPN)", simReader.sim1_name));
+//        if(simReader.sim1Num !=null)
+        simReader.simitems.add(new SimInfo("Mobile Number", simReader.sim1Num.toString()));
 
         if (simReader.isSIM2Ready) {
             simReader.simitems.add(new SimInfo(" ", " "));
             simReader.simitems.add(new SimInfo("SIM 2 state", simReader.sim2_STATE));
-            simReader.simitems.add(new SimInfo("Service provider name (SPN)", simReader.sim2_SPN));
-            simReader.simitems.add(new SimInfo("Mobile country code (MCC)", simReader.sim2_MCC));
-            simReader.simitems.add(new SimInfo("Mobile operator name", simReader.sim2_MNC));
+            simReader.simitems.add(new SimInfo("Service provider name (SPN)", simReader.sim2_name));
+//            if(simReader.sim2Num !=null)
+            simReader.simitems.add(new SimInfo("Mobile country code (MCC)", simReader.sim2Num.toString()));
 
 
             //telInf.scitemsArr.add(new Sci("NC (Neighboring Cell ", telInf.sim1_NC.toString() ));
@@ -183,3 +192,4 @@ public class SimReader {
 
 
 }
+
